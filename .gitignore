@@ -1,0 +1,17 @@
+*.mode1v3
+*.perspectivev3
+*.pbxuser
+.DS_Store
+/.DS_Store
+build
+www/phonegap.js
+# xcode noise
+build/*
+*.mode1
+*.mode1v3
+*.mode2v3
+*.perspective
+*.perspectivev3
+*.pbxuser
+*.xcworkspace
+xcuserdata
