@@ -1,12 +1,13 @@
 <xml projectName='coltApp' projectType='JS'>
   <paths>
-    <sources-set>**/*.js, -lib/*.js</sources-set>
+    <sources-set>**/*.js, -lib/*.js, -js/*.min.js</sources-set>
     <excludes-set>out/**, .git/**, .*/**, **/*bak___</excludes-set>
     <reloads-set>**/*.htm*, **/*.css, **/*.png</reloads-set>
   </paths>
   <build>
     <main-document>${project}/index.html</main-document>
-    <out-path>/Users/dimakruk/Documents/PhoneGapProjects/ColtApp/ColtIOSApp/platforms/ios/coltwww</out-path>
+    <use-custom-output-path>true</use-custom-output-path>
+    <out-path>/Users/dimakruk/Documents/PhoneGapProjects/ColtApp/ColtIOSApp/platforms/ios/colt_www</out-path>
     <precompile>
       <type-script>true</type-script>
       <use-less>true</use-less>
@@ -25,8 +26,8 @@
   </build>
   <live>
     <settings>
-      <clear-log>false</clear-log>
-      <disconnect>true</disconnect>
+      <clear-log>true</clear-log>
+      <disconnect>false</disconnect>
     </settings>
     <launch>
       <launcher>DEFAULT</launcher>
@@ -37,7 +38,7 @@
     <live>
       <paused>false</paused>
       <max-loop>10000</max-loop>
-      <live-html-edit>true</live-html-edit>
+      <live-html-edit>false</live-html-edit>
       <disable-in-minified>true</disable-in-minified>
     </live>
   </live>

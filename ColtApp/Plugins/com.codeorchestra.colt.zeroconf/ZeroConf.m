@@ -12,27 +12,33 @@
 @implementation ZeroConf
 
 - (void)watch:(CDVInvokedUrlCommand*)command{
+    NSLog(@"watch: %@", command.callbackId);
     NSString* arg = [command.arguments objectAtIndex:0];
     NSArray* arr = [arg componentsSeparatedByString:@"."];
-    type = [[[arr objectsAtIndexes:[NSIndexSet
+    type = [[[[arr objectsAtIndexes:[NSIndexSet
                                               indexSetWithIndexesInRange:NSMakeRange(0, arr.count - 2)
                                               ]
                         ] arrayByAddingObject:@""
-                       ] componentsJoinedByString:@"."];
-    domain = [NSString stringWithFormat:@"%@.", [arr objectAtIndex:arr.count - 2]];
-
-    [self start];
+                       ] componentsJoinedByString:@"."] retain];
+    domain = [[NSString stringWithFormat:@"%@.", [arr objectAtIndex:arr.count - 2]] retain];
     
     callbackId = [command.callbackId retain];
+    
+    [self start];
 }
 
 - (void)start {
     if (serviceBrowser == nil) {
-        serviceBrowser = [[NSNetServiceBrowser alloc] init];
-        [serviceBrowser setDelegate: (id)self];
+        serviceBrowser = [[[NSNetServiceBrowser alloc] init] retain];
+        serviceBrowser.delegate = (id)self;
     }
-    
-    [serviceBrowser searchForServicesOfType:type inDomain:domain];
+    if (self.searching) {
+        for (NSNetService *service in self.services) {
+            [self netServiceDidResolveAddress:service];
+        }
+    } else {
+        [serviceBrowser searchForServicesOfType:type inDomain:domain];
+    }
 }
 
 - (NSString *)copyStringFromTXTDict:(NSDictionary *)dict which:(NSString*)which {
@@ -74,6 +80,7 @@
     
     CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsDictionary:resultDic];
     [pluginResult setKeepCallbackAsBool:YES];
+    NSLog(@"callbackId = %@", callbackId);
     [self.commandDelegate sendPluginResult:pluginResult callbackId:callbackId];
     
 }
@@ -81,32 +88,76 @@
 // NSNetServiceBrowser delegate methods for service browsing
 - (void)netServiceBrowserWillSearch:(NSNetServiceBrowser *)browser{
     NSLog(@"netServiceBrowserWillSearch");
+    self.searching = YES;
 }
 - (void)netServiceBrowserDidStopSearch:(NSNetServiceBrowser *)browser{
     NSLog(@"netServiceBrowserDidStopSearch");
+    self.searching = NO;
 }
 - (void)netServiceBrowser:(NSNetServiceBrowser *)browser
              didNotSearch:(NSDictionary *)errorDict{
     NSLog(@"netServiceBrowser didNotSearch");
-    [self start];
+    for (NSString *key in errorDict) {
+        NSLog(@"[%@] = %@", key, [errorDict objectForKey:key]);
+    }
+    self.searching = NO;
     
+    isRestarted = YES;
+    [self start];
 }
 - (void)netServiceBrowser:(NSNetServiceBrowser *)browser
            didFindService:(NSNetService *)aNetService
                moreComing:(BOOL)moreComing{
-    if (services == nil) {
-        services = [[NSMutableArray alloc] init];
+    if (self.services == nil) {
+        self.services = [[NSMutableArray alloc] init];
     }
+    
     NSLog(@"aNetService.name ====> %@", aNetService.name);
-    [services addObject:aNetService];
+    
     [aNetService setDelegate:(id)self];
-    [aNetService resolveWithTimeout:0.0];
+    
+    if (isRestarted) {
+        if (tmpServices == nil) {
+            tmpServices = [self.services copy];
+            [self.services removeAllObjects];
+        }
+        
+        [self.services addObject:aNetService];
+        
+        if ([tmpServices indexOfObject:aNetService] == NSNotFound) {
+            [aNetService resolveWithTimeout:0.0];
+        }
+    } else {
+        [self.services addObject:aNetService];
+        [aNetService resolveWithTimeout:0.0];
+    }
+    
+    if (!moreComing && isRestarted) {
+        NSMutableArray *forRemove = [[NSMutableArray alloc] init];
+        for (NSNetService * service in tmpServices) {
+            if ([self.services indexOfObject:service] == NSNotFound) {
+                [forRemove addObject:service];
+            }
+        }
+        while (forRemove.count > 0) {
+            NSNetService * service = [forRemove firstObject];
+            [self.services removeObject:service];
+            [forRemove removeObject:service];
+            [self netServiceBrowser:browser didRemoveService:service moreComing:forRemove.count > 0];
+        }
+        [forRemove release];
+        
+        tmpServices = nil;
+        [tmpServices release];
+        
+        isRestarted = NO;
+    }
 }
 - (void)netServiceBrowser:(NSNetServiceBrowser *)browser
          didRemoveService:(NSNetService *)aNetService
                moreComing:(BOOL)moreComing{
     NSLog(@"netServiceBrowser didRemoveService");
-    [services removeObject:aNetService];
+    [self.services removeObject:aNetService];
     [self sendCallback:@"removed" sender:aNetService];
 }
 
@@ -115,7 +166,8 @@
     NSLog(@"netServiceWillPublish");
 }
 - (void)netServiceDidPublish:(NSNetService *)sender {
-   NSLog(@"netServiceDidPublish");
+    NSLog(@"netServiceDidPublish");
+    
 }
 - (void)netService:(NSNetService *)sender didNotPublish:(NSDictionary *)errorDict {
     NSLog(@"netService didNotPublish");

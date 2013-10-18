@@ -15,8 +15,12 @@
     
     NSNetServiceBrowser *serviceBrowser;
     
-    NSMutableArray *services;
+    NSMutableArray *tmpServices;
+    BOOL isRestarted;
 }
+
+@property BOOL searching;
+@property (strong,atomic) NSMutableArray *services;
 
 - (void)watch:(CDVInvokedUrlCommand*)command;
 @end
