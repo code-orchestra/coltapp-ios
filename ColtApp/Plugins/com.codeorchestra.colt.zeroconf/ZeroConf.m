@@ -15,21 +15,21 @@
     NSLog(@"watch: %@", command.callbackId);
     NSString* arg = [command.arguments objectAtIndex:0];
     NSArray* arr = [arg componentsSeparatedByString:@"."];
-    type = [[[[arr objectsAtIndexes:[NSIndexSet
+    type = [[[arr objectsAtIndexes:[NSIndexSet
                                               indexSetWithIndexesInRange:NSMakeRange(0, arr.count - 2)
                                               ]
                         ] arrayByAddingObject:@""
-                       ] componentsJoinedByString:@"."] retain];
-    domain = [[NSString stringWithFormat:@"%@.", [arr objectAtIndex:arr.count - 2]] retain];
+                       ] componentsJoinedByString:@"."];
+    domain = [NSString stringWithFormat:@"%@.", [arr objectAtIndex:arr.count - 2]];
     
-    callbackId = [command.callbackId retain];
+    callbackId = command.callbackId;
     
     [self start];
 }
 
 - (void)start {
     if (serviceBrowser == nil) {
-        serviceBrowser = [[[NSNetServiceBrowser alloc] init] retain];
+        serviceBrowser = [[NSNetServiceBrowser alloc] init];
         serviceBrowser.delegate = (id)self;
     }
     if (self.searching) {
@@ -58,7 +58,7 @@
     NSDictionary *dictionary = [NSNetService dictionaryFromTXTRecordData:[sender TXTRecordData]];
     [dictionary allKeys];
     for (NSString *key in dictionary) {
-        NSLog(@"[%@] = %@", key, [self copyStringFromTXTDict:dictionary which:key]);
+        //NSLog(@"[%@] = %@", key, [self copyStringFromTXTDict:dictionary which:key]);
     }
     
     NSMutableDictionary* service = [[NSMutableDictionary alloc] init];
@@ -113,6 +113,20 @@
     }
     
     NSLog(@"aNetService.name ====> %@", aNetService.name);
+    NSLog(@"%@", aNetService);
+    ///-----
+    NSMutableDictionary* service = [[NSMutableDictionary alloc] init];
+    [service setObject:aNetService.domain forKey:@"domain"];
+    [service setObject:[NSString stringWithFormat:@"%d", aNetService.port] forKey:@"port"];
+    [service setObject:aNetService.name forKey:@"name"];
+    if ([aNetService.addresses count] > 0) {
+        struct sockaddr_in *socketAddress = (struct sockaddr_in *) [aNetService.addresses[0] bytes];
+        [service setObject:[NSString stringWithFormat:@"%s", inet_ntoa(socketAddress->sin_addr)] forKey:@"addresses"];
+    }
+    for (NSString *key in service) {
+        NSLog(@"[%@] = %@", key, [service objectForKey:key]);
+    }
+    ///-----
     
     [aNetService setDelegate:(id)self];
     
@@ -145,10 +159,8 @@
             [forRemove removeObject:service];
             [self netServiceBrowser:browser didRemoveService:service moreComing:forRemove.count > 0];
         }
-        [forRemove release];
         
         tmpServices = nil;
-        [tmpServices release];
         
         isRestarted = NO;
     }

@@ -6,20 +6,21 @@
   </paths>
   <build>
     <main-document>${project}/index.html</main-document>
-    <use-custom-output-path>true</use-custom-output-path>
+    <use-custom-output-path>false</use-custom-output-path>
     <out-path>/Users/dimakruk/Documents/PhoneGapProjects/ColtApp/ColtIOSApp/platforms/ios/colt_www</out-path>
     <precompile>
-      <type-script>true</type-script>
-      <use-less>true</use-less>
-      <use-sass>true</use-sass>
-      <coffee-script>true</coffee-script>
+      <is-new>true</is-new>
+      <type-script>false</type-script>
+      <use-less>false</use-less>
+      <use-sass>false</use-sass>
+      <coffee-script>false</coffee-script>
     </precompile>
     <offline-cms>
       <integrate-mercury>false</integrate-mercury>
       <run-mercury>true</run-mercury>
     </offline-cms>
     <security>
-      <use-inspectable>true</use-inspectable>
+      <use-inspectable>false</use-inspectable>
       <can-edit></can-edit>
       <can-view>*</can-view>
     </security>
@@ -30,7 +31,7 @@
       <disconnect>false</disconnect>
     </settings>
     <launch>
-      <launcher>DEFAULT</launcher>
+      <launcher>MANUAL</launcher>
       <browser-path></browser-path>
       <nodejs-path></nodejs-path>
       <console-value></console-value>
@@ -38,7 +39,7 @@
     <live>
       <paused>false</paused>
       <max-loop>10000</max-loop>
-      <live-html-edit>false</live-html-edit>
+      <live-html-edit>true</live-html-edit>
       <disable-in-minified>true</disable-in-minified>
     </live>
   </live>
